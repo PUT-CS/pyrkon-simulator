@@ -1,0 +1,70 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-g",
+      "-I/usr/lib/x86_64-linux-gnu/openmpi/include",
+      "-I/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi",
+      "-I",
+      "/home/michal/Programming/PubHub/pubhub-server/include",
+      "-o",
+      "main",
+      "main.cpp"
+    ],
+    "directory": "/home/michal/Programming/mypyrkon",
+    "file": "/home/michal/Programming/mypyrkon/main.cpp",
+    "output": "/home/michal/Programming/mypyrkon/main"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-g",
+      "-I/usr/lib/x86_64-linux-gnu/openmpi/include",
+      "-I/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi",
+      "-I",
+      "/home/michal/Programming/PubHub/pubhub-server/include",
+      "-o",
+      "main",
+      "util.cpp"
+    ],
+    "directory": "/home/michal/Programming/mypyrkon",
+    "file": "/home/michal/Programming/mypyrkon/util.cpp",
+    "output": "/home/michal/Programming/mypyrkon/main"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-g",
+      "-I/usr/lib/x86_64-linux-gnu/openmpi/include",
+      "-I/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi",
+      "-I",
+      "/home/michal/Programming/PubHub/pubhub-server/include",
+      "-o",
+      "main",
+      "watek_glowny.cpp"
+    ],
+    "directory": "/home/michal/Programming/mypyrkon",
+    "file": "/home/michal/Programming/mypyrkon/watek_glowny.cpp",
+    "output": "/home/michal/Programming/mypyrkon/main"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-g",
+      "-I/usr/lib/x86_64-linux-gnu/openmpi/include",
+      "-I/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi",
+      "-I",
+      "/home/michal/Programming/PubHub/pubhub-server/include",
+      "-o",
+      "main",
+      "watek_komunikacyjny.cpp"
+    ],
+    "directory": "/home/michal/Programming/mypyrkon",
+    "file": "/home/michal/Programming/mypyrkon/watek_komunikacyjny.cpp",
+    "output": "/home/michal/Programming/mypyrkon/main"
+  }
+]

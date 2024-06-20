@@ -1,0 +1,126 @@
+#+OPTIONS: ^:nil
+* Tytuł
+Obsługa Pyrkonu
+
+* Autorzy
+Michał Miłek 151824
+Sebastian Nowak 152065
+
+* Opis problemu
+Uczestnicy Pyrkonu najpierw zdobywają jeden z b biletów na tegoroczny Pyrkon. Następnie wybierają pojedynczo kilka (ale nie wszystkie) z rozróżnialnych warsztatów, do każdego z nich zdobywając osobny bilet (na warsztacie może być maksymalnie w uczestników). Po przejściu kilku warsztatów uczestnik zwalnia bilet i przestaje się ubiegać, dopóki nie zacznie się kolejny Pyrkon. Gdy wszyscy uczestnicy zwiedzą Pyrkon, konwent się kończy i po jakimś czasie zaczyna kolejny.
+
+* Wiadomości
+- TICKET_REQ - żądanie biletu na Pyrkon
+- TICKET_ACK - potwierdzenie biletu na Pyrkonu
+- WORKSHOP_REQ - żądanie wejścia na warsztat
+- WORKSHOP_ACK - potwierdzenie wejścia na warsztat
+- PYRKON_END_REQ - zapytanie, czy Pyrkon jest pusty
+- PYRKON_END_YES - potwierdzenie czy Pyrkon jest pusty
+- PYRKON_END_NO - zaprzeczenie że Pyrkon jest pusty
+- START_PYRKON - rozpoczęcie nowego konwentu
+
+* Parametry
+- TicketWait - tablica identyfikatorów procesów oczekujących na TICKET_ACK, początkowo pusta
+- WorkshopWait - tablica identyfikatorów procesów oczekujących na WORKSHOP_ACK, początkowo pusta
+- WantedWorkshops - tablica identyfikatorów warsztatów, które proces chce odwiedzić.
+- TicketAckNum - liczba otrzymanych potwierdzeń TICKET_ACK, początkowo 0
+- WorkshopAckNum - liczba otrzymanych potwierdzeń WORKSHOP_ACK, początkowo 0
+- EndNum - liczba otrzymanych potwierdzeń END_YES, początkowo 0
+- EndResp - liczba otrzymanych wiadomości END_YES i END_NO w stanie OffPyrkon, początkowo 0
+- n - liczba procesów
+- b - liczba biletów
+- k - liczba warsztatów
+- w - pojemność warsztatu
+
+* Stany
+Stan początkowy: WaitingForPyrkon
+- WaitingForPyrkon - nie ubiega się o bilet na Pyrkon
+- WaitingForTicket - oczekuje na otrzymanie biletu na Pyrkon
+- AtPyrkon - w sekcji krytycznej, po otrzymaniu biletu wstępu
+- WaitingForWorkshop - oczekuje na otrzymaniie biletu na warsztat
+- AtWorkshop - w sekcji krytyczne, po otrzymaniu biletu warsztatu
+- OffPyrkon - czeka na kolejny konwent
+
+* Szkic algorytmu
+Na początku procesy wysyłają TICKET_REQ do wszystkich innych żeby się dostać na konwent. Pozostałe procesy wysyłają TICKET_ACK o ile nie są w sekcji krytycznej. Kiedy proces nie może wysłać TICKET_ACK to zapamiętuje ten request i wysyła go dopiero po wyjściu z sekcji krytycznej. Po dostaniu się na konwent proces zaczyna losować warsztaty i do nieodwiedzonych wysyłać prośby WORKSHOP_REQ. Pozostałe procesy wysyłają WORKSHOP_ACK o ile nie są w sekcji krtycznej. Kiedy proces nie może wysłać WORKSHOP_ACK to zapamiętuje ten request i wysyła go dopiero po wyjściu z sekcji krytycznej. Po skończonych warsztatach proces wychodzi z sekcji krytycznej Pyrkonu i wysyła TICKET_ACK o ile jakieś ma zapamiętane. Na koniec wysyła zapytanie PYRKON_END_REQ i sprawdza ile procesów jeszcze jest na Pyrkonie. Jeśli każdy z pozostałych procesów wyśle komunikat PYRKON_END_YES oznacza to rozpoczęcie kolejnego konwentu. Proces wysyła komunikat START_PYRKON. W przeciwnym przypadku ustawia swoją flagę na OffPyrkon. Każdy proces po otrzymaniu START_PYTKON zmienia flagę z OffPyrkon na WaitingForPyrkon.
+
+* Opis algorytmu dla procesu
+
+1.  ustawiany jest stan początkowy WaitingForPyrkon.
+2.  Proces decyduje się iść na konwent.
+3.  TicketAckNum jest ustawiane na 0.
+4.  Proces reaguje na wiadomości:
+   - TICKET_REQ - odpowiada TICKET_ACK
+   - WORKSHOT_REQ - odpowiada WORKSHOP_ACK
+   - PYRKON_END_REQ - odpowiada PYRKON_END_NO
+   Reszta komunikatów ignorowana.
+5. WaitingForTicket - proces chce wejść do sekcji krytycznej
+6. Wysyła pozostałym procesom TICKET_REQ i czeka na odpowiedzi.
+7. Zlicza ilość TICKET_ACK od innych procesów.
+8. Wchodzi do sekcji krytycznej jeśli  suma wynosi n - b - 1.
+9. Proces reaguje na wiadomości:
+   - TICKET_ACK - dodaje 1 do wartości TicketAckNum
+   - PYRKON_END_REQ - odpowiada PYRKON_END_NO
+   - WORKSHOP_REQ - odpowiada WORKSHOP_ACK
+   - TICKET_REQ - wysyła TICKET_ACK jeśli może, inaczej indeks nadawcy jest dodawany do tablicy TicketWait.
+     Reszta komunikatów ignorowana.
+10. AtPyrkon - proces jest w sekcji krytycznej.
+11. Proces generuje losową liczbę i kolejność warsztatów zapisując je w tablicy WantedWorkshops.
+12. Każdy warsztat ma zmienną WorkshopAckNum ustawianą na 0 i przechodzi do stanu WaitingForWorkshop.
+13. Proces reaguje na wiadomości:
+    - PYRKON_END_REQ - odpowiada PYRKON_END_NO
+    - TICKET_REQ - dodaje id procesu do tablicy TicketWait
+    - WORKSHOP_REQ - odpowiada WORKSHOP_ACK
+    Reszta komunikatów ignorowana.
+14. WaitingForWorkshop - proces chce wejść do sekcji krytycznej
+15. Wysyła pozostałym procesom WORKSHOP_REQ i czeka na odpowiedzi.
+16. Zlicza ilość WOKRSHOP_ACK od innych procesów.
+17. Wchodzi do sekcji krytycznej jeśli suma wynosi n - w - 1.
+18. Proces reaguje na wiadomości:
+    - WORKSHOP_ACK - dodaje 1 do wartości WorkshopAckNum
+    - PYRKON_END_REQ - odpowiada PYRKON_END_NO
+    - WORKSHOP_REQ - wysyła WORKSHOP_ACK jeśli może, inaczej indeks nadawcy jest dodawany do tablicy WorkshopWait.
+    - TICKET_REQ - dodaje proces do tablicy TicketWait.
+    Reszta komunikatów ignorowana.
+19. AT_WOKRSHOP - proces jest w sekcji krytycznej.
+20. Proces przebywa w sekcji krytycznej.
+21. Wyjście z sekcji krytycznej decyduje tablica WorkshopWait i do każdego procesu w niej wysyła WorkshopAck.
+22. Jeżeli w WantedWorkshops są jakieś warsztaty które interesują proces to przechodzi on do stanu WaitingForWorkshop dla tego warsztatu.
+23. Jeśli WantedWorkshops jest puste proces ustawia stan jako OffPyrkon
+24. Proces reaguje na wiadomości:
+    - WORKSHOP_REQ - odpowiada WORKSHOP_ACK jeżeli proces ma w planach inny warsztat, inaczej dodaje go do tablicy WorkshopWait
+    - TICKET_REQ - dodaje indeks nadawcy do tablicy TicketWait.
+    - PYRKON_END_REQ - odsyła PYRKON_END_NO
+    Reszta komunikatów ignorowana.
+25. OFF-PYRKON - proces oczekuje na kolejną edycję.
+26. Ten stan jest ustawiany po opuszczeniu pyrkonu, czyli obejrzeniu wszystkich warsztatów jakie go interesowały.
+27. Proces wysyła TICKET_ACK do procesów w tablicy TicketWait i wysyła PYRKON_END_REQ do każdego procesu i sumuje ile PYRKON_END_YES otrzymuje.
+28. Jeśli od każdego procesu otrzymał PYRKON_END_YES to do każdego procesu wysyła komunikat START_PYRKON i ustawia swój stan na WaitingForPyrkon. W przeciwnym wypadku jest w stanie oczekiwania.
+29. Proces będący w stanie OffPyrkon zmieni swój stan na WaitingForPyrkon jeśli otrzyma wiadomość START_PYRKON
+30. Proces reaguje na wiadomości:
+    - TICKET_REQ - odpowiada TICKET_YES
+    - WORKSHOP_REQ - odpowiada WORKSHOP_YES
+    - PYRKON_END_REQ - odpowiada PYRKON_END_YES
+    Reszta komunikatów ignorowana.
+
+* Złożność czasowa
+k- liczba warsztatów
+Proces może przejść przez wszystkie warsztaty więc:
+   1. Prośba o dostęp na Pyrkon
+   2. Wejście na Pyrkon
+   3. Losowanie warsztatów
+   4. Wejście na każdy warsztat (max k - 1)
+   5. Wyjście z każdego warsztatu (max k - 1)
+   6. Wyjście z Pyrkonu
+Złożoność czasowa w najgorszym przypadku wynosi:
+4 + 2 * (k - 1) = 2k + 2 -> O(k)
+
+* Złożoność komunikacyjna
+n - liczba procesów
+k - liczba warsztatów
+Każdy proces musi:
+    1. Wejść na Pyrkon: n-1 komunikatów i odpowiedzi
+    2. Wejść na warsztat: n-1 komunikatów i odpowiedzi (max k - 1)
+    3. Zapytać o koniec: n-1 komunikatów i odpowiedzi
+Złożoność czasowa w najgorszym przypadku wynosi:
+4 * (n - 1) + 2 * (n - 1)(k - 1) = 2 * (n - 1)(k - 1) -> O(nk)
